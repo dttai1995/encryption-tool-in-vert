@@ -1,24 +1,49 @@
 package com.example.starter;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-public class MainVerticle extends AbstractVerticle {
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.*;
+import java.util.Base64;
 
-  @Override
-  public void start(Future<Void> startFuture) throws Exception {
-    vertx.createHttpServer().requestHandler(req -> {
-      req.response()
-        .putHeader("content-type", "text/plain")
-        .end("Hello from Vert.x!");
-    }).listen(8888, http -> {
-      if (http.succeeded()) {
-        startFuture.complete();
-        System.out.println("HTTP server started on port 8888");
-      } else {
-        startFuture.fail(http.cause());
-      }
-    });
+
+public class MainVerticle  {
+  /**
+   * Generate key which contains a pair of privae and public key using 1024 bytes
+   * @return key pair
+   * @throws NoSuchAlgorithmException
+   */
+  public static void generateKey() throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException {
+    Security.addProvider(new BouncyCastleProvider());
+    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+    keyGen.initialize(2048);
+    KeyPair key = keyGen.generateKeyPair();
+    Cipher cipher  = Cipher.getInstance("RSA");
+    cipher.init(Cipher.ENCRYPT_MODE, key.getPublic());
+    byte[] bytes = cipher.doFinal("Hello world".getBytes());
+    String x = Base64.getEncoder().encodeToString(bytes);
+    System.out.println(x);
+    cipher.init(Cipher.DECRYPT_MODE, key.getPrivate());
+    System.out.println(new String(cipher.doFinal(Base64.getDecoder().decode(x.getBytes()))));
+  }
+
+  public static void main(String[] args) {
+    try {
+      generateKey();
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (InvalidKeyException e) {
+      e.printStackTrace();
+    } catch (NoSuchPaddingException e) {
+      e.printStackTrace();
+    } catch (BadPaddingException e) {
+      e.printStackTrace();
+    } catch (IllegalBlockSizeException e) {
+      e.printStackTrace();
+    }
   }
 
 }

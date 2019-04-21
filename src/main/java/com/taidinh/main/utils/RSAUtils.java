@@ -14,6 +14,7 @@ import java.util.Base64;
 
 
 public class RSAUtils {
+
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -39,9 +40,9 @@ public class RSAUtils {
         return publicKey;
     }
 
-    public static PrivateKey getPrivateKey(byte[] base64PublicKey) {
+    public static PrivateKey getPrivateKey(byte[] base64PrivateKey) {
         PrivateKey privateKey = null;
-        String content = new String(base64PublicKey);
+        String content = new String(base64PrivateKey);
         content = content.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
         content = content.replace("-----END RSA PRIVATE KEY-----", "");
         content = content.replace("\n", "");
@@ -68,7 +69,8 @@ public class RSAUtils {
     public static String decrypt(String data, byte[] privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, getPrivateKey(privateKey));
-        return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes()));
+        byte[] bytes = Base64.getDecoder().decode(data.getBytes());
+        return new String(cipher.doFinal(bytes));
     }
 
 }
